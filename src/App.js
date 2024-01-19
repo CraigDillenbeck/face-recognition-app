@@ -1,23 +1,115 @@
-import logo from './logo.svg';
+import { useState } from 'react';
 import './App.css';
+import Navigation from './components/navigation/Navigation';
+import Logo from './components/Logo/Logo';
+import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
+import Rank from './components/Rank/Rank';
+import FaceRecognition from './components/FaceRecognition/FaceRecognition';
+import ParticlesBg from 'particles-bg';
 
-function App() {
+const App = () => {
+  const [input, setInput] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [box, setBox] = useState({});
+
+  const onInputChange = (e) => {
+    setInput(e.target.value);
+  }
+
+  const returnClarifaiRequestOptions = (imageUrl) => {
+    // CLARIFAI CODE
+    const PAT = '2ca102d212a94b93b589e302dc00c670';
+    const USER_ID = 'craigdillenbeck';
+    const APP_ID = 'facial-recognition';
+    // const MODEL_ID = 'face-detection';
+    const IMAGE_URL = imageUrl;
+
+    const raw = JSON.stringify({
+      "user_app_id": {
+          "user_id": USER_ID,
+          "app_id": APP_ID
+      },
+      "inputs": [
+          {
+              "data": {
+                  "image": {
+                      "url": IMAGE_URL
+                      // "base64": IMAGE_BYTES_STRING
+                  }
+              }
+          }
+      ]
+  });
+
+  const requestOptions = {
+      method: 'POST',
+      headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Key ' + PAT
+      },
+      body: raw
+    };
+
+    return requestOptions;
+  }
+
+  const onButtonSubmit = () => {
+    setImageUrl(input);
+
+    fetch("https://api.clarifai.com/v2/models/" + 'face-detection' + "/outputs", returnClarifaiRequestOptions(input))
+        .then(response => response.json())
+        .then(result => {
+
+            // Craig code - image data
+            const image = document.getElementById('input-image');
+            const width = Number(image.width);
+            const height = Number(image.height);
+
+            // CLARIFAI
+            const regions = result.outputs[0].data.regions;
+
+            regions.forEach(region => {
+                // Accessing and rounding the bounding box values
+                const boundingBox = region.region_info.bounding_box;
+                const topRow = boundingBox.top_row.toFixed(3);
+                const leftCol = boundingBox.left_col.toFixed(3);
+                const bottomRow = boundingBox.bottom_row.toFixed(3);
+                const rightCol = boundingBox.right_col.toFixed(3);
+
+                region.data.concepts.forEach(concept => {
+                    // Accessing and rounding the concept value
+                    const name = concept.name;
+                    const value = concept.value.toFixed(4);
+
+                    console.log(`${name}: ${value} BBox: ${topRow}, ${leftCol}, ${bottomRow}, ${rightCol}`);
+
+                    // Craig code - parameters to display box
+                    const boxLeft = leftCol * width;
+                    const boxTop = topRow * height;
+                    const boxRight = width - (rightCol * width);
+                    const boxBottom = height - (bottomRow * height);
+                    // set state in 'box' object
+                    setBox({
+                      left: boxLeft,
+                      top: boxTop,
+                      right: boxRight,
+                      bottom: boxBottom
+                    })
+                });
+            });
+
+        })
+        .catch(error => console.log('error', error));
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <ParticlesBg color='#5e789b' type="cobweb" bg={true} />
+      <Navigation />
+      {/* <Logo /> */}
+      <Rank />
+      <ImageLinkForm onInputChange={onInputChange} onButtonSubmit={onButtonSubmit} />
+      <FaceRecognition box={box} imageUrl={imageUrl}/>
     </div>
   );
 }
