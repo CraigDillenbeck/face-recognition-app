@@ -19,7 +19,7 @@ const App = () => {
     id: '',
     name: '',
     email: '',
-    entries: 0,
+    entries: '',
     joined: ''
   })
 
