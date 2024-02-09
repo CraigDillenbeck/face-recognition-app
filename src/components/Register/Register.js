@@ -18,7 +18,7 @@ const Register = ({ onRouteChange, loadUser }) => {
   }
 
   const onSubmitRegister = () => {
-    fetch('http://localhost:3001/register', {
+    fetch('https://i-see-your-face-backend.onrender.com/register', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({

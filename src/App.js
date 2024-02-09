@@ -48,8 +48,7 @@ const App = () => {
   }
 
   const returnClarifaiRequestOptions = (imageUrl) => {
-    // CLARIFAI CODE
-    // Consider moving all this to the backend to protect PAT - need to explore.
+    // CLARIFAI
     const PAT = '2ca102d212a94b93b589e302dc00c670';
     const USER_ID = 'craigdillenbeck';
     const APP_ID = 'facial-recognition';
@@ -92,7 +91,7 @@ const App = () => {
         .then(response => response.json())
         .then(result => {
           if (result) {
-            fetch('http://localhost:3001/image', {
+            fetch('https://i-see-your-face-backend.onrender.com:3000/image', {
               method: 'PUT',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({
