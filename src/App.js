@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './App.css';
 import Navigation from './components/navigation/Navigation';
 import Signin from './components/Signin/Signin';
-import Logo from './components/Logo/Logo';
+// import Logo from './components/Logo/Logo';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import Rank from './components/Rank/Rank';
 import FaceRecognition from './components/FaceRecognition/FaceRecognition';
@@ -15,6 +15,23 @@ const App = () => {
   const [box, setBox] = useState({});
   const [route, setRoute] = useState('signin');
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [user, setUser] = useState({
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: ''
+  })
+
+  const loadUser = (data) => {
+    setUser({
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    })
+  }
 
   const onInputChange = (e) => {
     setInput(e.target.value);
@@ -22,6 +39,7 @@ const App = () => {
 
   const onRouteChange = (route) => {
     if (route === 'signout') {
+      setImageUrl('');
       setIsSignedIn(false)
     } else if (route === 'home') {
       setIsSignedIn(true)
@@ -31,6 +49,7 @@ const App = () => {
 
   const returnClarifaiRequestOptions = (imageUrl) => {
     // CLARIFAI CODE
+    // Consider moving all this to the backend to protect PAT - need to explore.
     const PAT = '2ca102d212a94b93b589e302dc00c670';
     const USER_ID = 'craigdillenbeck';
     const APP_ID = 'facial-recognition';
@@ -66,14 +85,30 @@ const App = () => {
     return requestOptions;
   }
 
-  const onButtonSubmit = () => {
+  const onPictureSubmit = () => {
     setImageUrl(input);
 
     fetch("https://api.clarifai.com/v2/models/" + 'face-detection' + "/outputs", returnClarifaiRequestOptions(input))
         .then(response => response.json())
         .then(result => {
+          if (result) {
+            fetch('http://localhost:3001/image', {
+              method: 'PUT',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                id: user.id
+              })
+            })
+              .then(response => response.json())
+              .then(count => {
+                setUser({
+                  ...user,
+                  entries: count
+                });
+              })
+              .catch(console.log)
+          }
 
-            // Craig code - image data
             const image = document.getElementById('input-image');
             const width = Number(image.width);
             const height = Number(image.height);
@@ -96,12 +131,12 @@ const App = () => {
 
                     console.log(`${name}: ${value} BBox: ${topRow}, ${leftCol}, ${bottomRow}, ${rightCol}`);
 
-                    // Craig code - parameters to display box
+                    // parameters to display box
                     const boxLeft = leftCol * width;
                     const boxTop = topRow * height;
                     const boxRight = width - (rightCol * width);
                     const boxBottom = height - (bottomRow * height);
-                    // set state in 'box' object
+
                     setBox({
                       left: boxLeft,
                       top: boxTop,
@@ -122,14 +157,14 @@ const App = () => {
       { route === 'home'
         ? <div>
             {/* <Logo /> */}
-            <Rank />
-            <ImageLinkForm onInputChange={onInputChange} onButtonSubmit={onButtonSubmit} />
+            <Rank userName={user.name} userEntries={user.entries} />
+            <ImageLinkForm onInputChange={onInputChange} onPictureSubmit={onPictureSubmit} />
             <FaceRecognition box={box} imageUrl={imageUrl}/>
           </div>
         : (
             route === 'signin'
-            ? <Signin onRouteChange={onRouteChange} />
-            : <Register onRouteChange={onRouteChange} />
+            ? <Signin onRouteChange={onRouteChange} loadUser={loadUser} />
+            : <Register onRouteChange={onRouteChange} loadUser={loadUser} />
           )
       }
     </div>
