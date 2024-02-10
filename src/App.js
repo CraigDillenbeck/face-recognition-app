@@ -91,7 +91,7 @@ const App = () => {
         .then(response => response.json())
         .then(result => {
           if (result) {
-            fetch('https://i-see-your-face-backend.onrender.com:3000/image', {
+            fetch('https://i-see-your-face-backend.onrender.com/image', {
               method: 'PUT',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({
