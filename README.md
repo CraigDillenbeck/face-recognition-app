@@ -1,3 +1,10 @@
+Facial-Recognition App allows users to submit an image-url and the image will return with an AI generated frame around the face in the image. 
+
+Built as a final project from Zero-To-Mastery's 'Complete Web Developer' course. 
+
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
